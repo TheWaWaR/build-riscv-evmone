@@ -1,0 +1,10 @@
+[submodule "ethash"]
+	path = ethash
+	url = https://github.com/TheWaWaR/ethash.git
+	branch = support-riscv
+[submodule "intx"]
+	path = intx
+	url = https://github.com/chfast/intx.git
+[submodule "evmone"]
+	path = evmone
+	url = https://github.com/ethereum/evmone.git
