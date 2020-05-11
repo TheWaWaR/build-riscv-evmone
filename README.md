@@ -7,3 +7,8 @@ cd build-riscv-evmone
 git submodule update --init --recursive
 make all-via-docker
 ```
+
+Then test the binary in `ckb-vm`:
+``` bash
+./util.py run
+```
