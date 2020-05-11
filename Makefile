@@ -20,8 +20,8 @@ all-via-docker:
 	mkdir -p build
 	docker run --rm -v `pwd`:/code ${BUILDER_DOCKER} bash -c "cd /code && make"
 
-build/evmone: main.cpp $(ALL_OBJS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ main.cpp $(ALL_OBJS)
+build/evmone: main.c $(ALL_OBJS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ main.c $(ALL_OBJS)
 	$(OBJCOPY) --strip-debug --strip-all $@
 	riscv64-unknown-elf-run $@
 
@@ -46,3 +46,6 @@ build/div.o: intx/lib/intx/div.cpp
 
 clean:
 	rm -rf build/*
+
+clean-main:
+	rm -rf build/evmone
