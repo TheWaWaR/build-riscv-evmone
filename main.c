@@ -1,7 +1,21 @@
 
 #include <evmone/evmone.h>
 #include <evmc/evmc.h>
-/* #include <stdio.h> */
+#include <stdio.h>
+#include "ckb_syscalls.h"
+
+/*
+ *  If run from a ethereum transaction, the input data should include:
+ *   1. The transaction
+ *      - For verify the `signature` and `sender` address
+ *      - For get the sender `address` and `nonce`
+ *      - For get the `input-data` to run the contract
+ *   2. The target contract code (when create contract this is empty, `to` is not given)
+ *      - For run the contract
+ *   2. The key-value pairs the transaction will read, and a merkle proof of those pairs
+ *   3. The key-value pairs the transaction will write, and a merkle proof of those pairs
+ */
+static char buffer[1024];
 
 struct evmc_host_context {
   evmc_address address;
@@ -30,12 +44,17 @@ enum evmc_storage_status set_storage(struct evmc_host_context* context,
   return EVMC_STORAGE_ADDED;
 }
 
-/* void println_hex(const char *prefix, const uint8_t *data, size_t size) { */
-/*   printf("%s => 0x", prefix); */
-/*   for(size_t i = 0; i < size; i++) */
-/*     printf("%02x", data[i]); */
-/*   printf("\n"); */
-/* } */
+void println_hex(const char *prefix, const uint8_t *data, size_t size) {
+  char *current = buffer;
+  int len = sprintf(current, "%s => 0x", prefix);
+  current += len;
+  for(size_t i = 0; i < size; i++) {
+    sprintf(current, "%02x", data[i]);
+    current += 2;
+  }
+  *current = '\0';
+  ckb_debug(buffer);
+}
 
 /// NOTE: This program must compile use g++ since evmone implemented with c++17
 int main() {
@@ -57,15 +76,19 @@ int main() {
 
   struct evmc_result res = vm->execute(vm, &interface, &context, EVMC_MAX_REVISION, &msg, code, sizeof(code));
 
-  /* printf("msg.gas: %ld\n", msg.gas); */
-  /* printf("status_code: %d\n", res.status_code); */
-  /* printf("gas_left: %ld, gas_cost: %ld\n", res.gas_left, msg.gas - res.gas_left); */
-  /* printf("output_size: %ld\n", res.output_size); */
-  /* println_hex("output_data", res.output_data, res.output_size); */
+  sprintf(buffer, "msg.gas: %ld", msg.gas);
+  ckb_debug(buffer);
+  sprintf(buffer, "status_code: %d", res.status_code);
+  ckb_debug(buffer);
+  sprintf(buffer, "gas_left: %ld, gas_cost: %ld", res.gas_left, msg.gas - res.gas_left);
+  ckb_debug(buffer);
+  sprintf(buffer, "output_size: %ld", res.output_size);
+  ckb_debug(buffer);
+  println_hex("output_data", res.output_data, res.output_size);
 
-  /* println_hex("context.address", context.address.bytes, sizeof(context.address.bytes)); */
-  /* println_hex("context.key    ", context.key.bytes, sizeof(context.key.bytes)); */
-  /* println_hex("context.value  ", context.value.bytes, sizeof(context.value.bytes)); */
+  println_hex("context.address", context.address.bytes, sizeof(context.address.bytes));
+  println_hex("context.key    ", context.key.bytes, sizeof(context.key.bytes));
+  println_hex("context.value  ", context.value.bytes, sizeof(context.value.bytes));
 
   return (int)res.status_code;
 }
