@@ -82,6 +82,25 @@ def make_bin_array(path):
     print('size = {}'.format(size))
     for i in range(size):
         print('0x{}'.format(content[i*2:(i+1)*2]), end=', ')
+    print('')
+
+def make_cli_arg(path):
+    import struct
+    from binascii import hexlify
+    content = open(path).read().strip()
+    size = int(len(content)/2)
+    output = ['00' * 65]
+    output.append('{}'.format(hexlify(struct.pack('<i', size)).decode('utf-8')))
+    output.append(content)
+    # input data size
+    output.append('{}'.format(hexlify(struct.pack('<i', 0)).decode('utf-8')))
+    for i in range(len(output)):
+        print((i, output[i]))
+    print(''.join(output) + '\n')
+
+    total_size = 65 + 4 + size + 4
+    print('program size: {}'.format(hexlify(struct.pack('<i', total_size)).decode('utf-8')))
+
 
 def run(path):
     import tempfile
@@ -111,11 +130,14 @@ def run(path):
 
 USAGE = '''USAGE:
   ./util.py make-array Xxx.sol.bin
+  ./util.py make-args Xxx.sol.bin
   ./util.py run'''
 if len(sys.argv) < 2:
     print(USAGE)
 elif sys.argv[1] == 'make-array':
     make_bin_array(sys.argv[2])
+elif sys.argv[1] == 'make-args':
+    make_cli_arg(sys.argv[2])
 elif sys.argv[1] == 'run':
     binary_path = sys.argv[2] if len(sys.argv) > 2 else './build/evmone'
     run(binary_path)
